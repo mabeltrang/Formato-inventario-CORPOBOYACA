@@ -22,7 +22,23 @@ hoja **Inventario**) en la **Parte A – Inventario Forestal al 100 %** del form
 - Deja el **ID** del inventario en una columna agrupada y oculta al final (botón «+» para verla), fuera del área de impresión.
 - Configura la impresión: papel 8,5 × 13 (Folio), ajuste a una página de ancho y encabezados de tabla repetidos en cada hoja.
 - Pestaña de **búsqueda por especie**: número de árboles, fustes, AB y volumen por especie.
-- La **Parte B** se entrega en blanco (plantilla limpia) para llenarla a mano.
+- **Parte B** (opcional, se activa en la pestaña Parte B). Cada sección se llena así:
+  - **Sección 1, sistema asociado.** Se elige en un formulario.
+  - **Sección 2, características biofísicas.**
+    - Altitud y pendiente salen del **KMZ del predio** usando un DEM (OpenTopoData SRTM 30 m, con Open-Meteo 90 m como respaldo).
+    - La topografía se clasifica por la pendiente: Plana ≤ 3 %, Ondulada ≤ 12 % y Colina > 12 %.
+    - Los cuerpos de agua se ingresan en el formulario.
+  - **Sección 3, uso del suelo.** Formulario.
+    - El área del predio sale del KMZ.
+    - La app avisa si hay árboles fuera del polígono.
+  - **Sección 4, aspectos técnicos.**
+    - Árboles y volumen por especie salen del inventario.
+    - El precio por m³ sale de `plantilla/precios_madera.csv` y se puede editar en la app.
+    - Jornales = máx(árboles ÷ árboles por jornal, m³ ÷ m³ por jornal), con mínimo 1. Ambos rendimientos son supuestos editables.
+    - El patio de acopio es el **árbol central** del inventario (el medoide).
+  - **Sección 5, renovabilidad.**
+    - Se siembran 10 plantas por árbol sin amenaza y 15 por árbol amenazado.
+    - La app genera el texto de compensación para el informe.
 
 ### Validaciones
 
@@ -32,6 +48,29 @@ hoja **Inventario**) en la **Parte A – Inventario Forestal al 100 %** del form
   - IDs repetidos.
   - X y Y invertidas (se corrigen solas).
   - Dos árboles que quedan con la misma coordenada en grados, minutos y segundos.
+
+## Amenaza de especies
+
+`fgr06/amenazas/` es una copia de la consulta de amenaza del repo
+[analisis-compensacion-forestal](https://github.com/mabeltrang/analisis-compensacion-forestal)
+(commit c0c980d). Incluye las listas MADS Res. 0126/2024, CITES y UICN, y las vedas nacionales y regionales.
+
+Para el 15:1 se considera **amenazada** una especie que cumpla cualquiera de estas condiciones:
+
+- CR, EN o VU en MADS.
+- CR, EN o VU en UICN.
+- CITES Apéndice I o II.
+- Opcionalmente, estar en veda.
+
+Si actualizas las listas en el otro repo, copia de nuevo los CSV a `fgr06/amenazas/datos/`.
+
+## Precios de la madera en pie
+
+`plantilla/precios_madera.csv` tiene las columnas `nombre_cientifico`, `nombre_comun`, `precio_cop_m3_en_pie`, `fuente` y `fecha`.
+
+- Si la especie no tiene precio, se usa el de `Genero sp` y la app lo avisa.
+- Los precios editados en la app se descargan como CSV actualizado. Súbelo al repo para que queden guardados.
+- Documenta la fuente de cada precio, por ejemplo la cotización de un aserrío local con su fecha.
 
 ## Estructura
 
@@ -43,10 +82,15 @@ fgr06/
   escritor.py              Escritura del FGR-06 Parte A sobre la plantilla
   excel_utils.py           Insertar columnas conservando combinaciones y anchos
   resumen.py               Tablas de vista previa y resumen por especie
+  parte_b.py               Cálculo y escritura de la Parte B
+  predio.py                KMZ: área, árboles dentro del predio, altitud y pendiente (DEM)
+  precios.py               Tabla de precios por especie
+  amenazas/                MADS / CITES / UICN / vedas (copiado de analisis-compensacion-forestal)
 plantilla/
   FGR-06_v7_plantilla.xlsx          Formato CORPOBOYACÁ limpio (Parte A sin filas, Parte B en blanco)
   Plantilla_Inventario_Forestal.xlsx Inventario de campo en blanco (formato propio, con fórmulas)
   crear_plantilla_inventario.py      Regenera la plantilla de inventario
+  precios_madera.csv                 Precios de referencia $/m³ en pie
 ejemplos/
   crear_ejemplo.py         Genera un inventario ficticio (incluye un árbol de 5 fustes)
   inventario_ejemplo.xlsx
@@ -74,7 +118,7 @@ pytest -q
 1. Sube el repo a GitHub.
 2. En share.streamlit.io, crea una app nueva que apunte a `app.py`.
 
-No requiere variables de entorno ni secretos.
+No requiere variables de entorno ni secretos. Para altitud y pendiente, la app necesita salida a internet hacia api.opentopodata.org o api.open-meteo.com; Streamlit Cloud la tiene.
 
 ## Salida
 

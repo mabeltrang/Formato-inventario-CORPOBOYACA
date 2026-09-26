@@ -103,8 +103,17 @@ def _escribir(ws, fila, grupo, valor, formato=None, fuente=FUENTE, alineacion=CE
         ws.merge_cells(start_row=fila, start_column=c1, end_row=fila, end_column=c2)
 
 
-def generar_fgr06(inv: Inventario, decimales_seg: int = 2, plantilla: Path | str = PLANTILLA) -> bytes:
-    """Genera el FGR-06 y lo devuelve como bytes (.xlsx)."""
+def generar_fgr06(
+    inv: Inventario,
+    decimales_seg: int = 2,
+    plantilla: Path | str = PLANTILLA,
+    parte_b=None,
+) -> bytes:
+    """Genera el FGR-06 y lo devuelve como bytes (.xlsx).
+
+    Si se pasa `parte_b` (fgr06.parte_b.DatosParteB) también se llena la Parte B;
+    si no, la Parte B queda en blanco.
+    """
     wb = openpyxl.load_workbook(plantilla)
     ws = wb.worksheets[HOJA_PARTE_A]
 
@@ -182,6 +191,11 @@ def generar_fgr06(inv: Inventario, decimales_seg: int = 2, plantilla: Path | str
     ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_options.verticalCentered = False
+
+    if parte_b is not None:
+        from .parte_b import escribir_parte_b
+
+        escribir_parte_b(wb, parte_b)
 
     # Sin líneas internas en celdas combinadas (se ven en Google Sheets / LibreOffice)
     for hoja in wb.worksheets:
