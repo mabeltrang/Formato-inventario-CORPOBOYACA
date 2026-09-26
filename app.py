@@ -52,9 +52,15 @@ with st.sidebar:
         f"Segundos de coordenada con {DECIMALES_SEG} decimales."
     )
 
-archivo = st.file_uploader("Inventario forestal (.xlsx)", type=["xlsx"])
+col_inv, col_kmz = st.columns(2)
+archivo = col_inv.file_uploader("1. Inventario forestal (.xlsx)", type=["xlsx"])
+kmz = col_kmz.file_uploader(
+    "2. Polígono del predio (.kmz o .kml) · opcional",
+    type=["kmz", "kml"],
+    help="Para la Parte B: área del predio, altitud, pendiente y árboles fuera del polígono.",
+)
 if archivo is None:
-    st.info("Esperando el archivo…")
+    st.info("Sube el inventario para empezar. El KMZ es opcional y se usa en la Parte B.")
     st.stop()
 
 try:
@@ -140,8 +146,10 @@ with tab_b:
 
     # --- Predio (KMZ) ---------------------------------------------------------
     st.subheader("Predio")
-    kmz = st.file_uploader("Polígono del predio (.kmz o .kml)", type=["kmz", "kml"])
     area_kmz, relieve = None, None
+    if kmz is None:
+        st.info("Sin KMZ: el área del predio, la altitud y la pendiente se escriben a mano abajo. "
+                "Puedes subirlo arriba, junto al inventario.")
     if kmz is not None:
         datos_kmz = kmz.getvalue()
         try:
