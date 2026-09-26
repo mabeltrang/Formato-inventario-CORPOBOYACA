@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.env
+# No subir inventarios reales (datos de propietarios y coordenadas)
+/datos/
+/salidas/
+*.xlsx
+!plantilla/*.xlsx
+!ejemplos/inventario_ejemplo.xlsx
