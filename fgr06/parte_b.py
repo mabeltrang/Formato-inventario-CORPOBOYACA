@@ -54,6 +54,17 @@ OBS_DEFECTO = (
     "La madera resultante del aprovechamiento forestal no será extraida del predio, "
     "su propietario destinará su uso dentro del mismo sitio. "
 )
+# Plantas a sembrar por árbol talado (sin amenaza, amenazado) según el tipo de aprovechamiento
+RELACION_SIEMBRA = {
+    "unico": (10, 15),      # valores indicados por CORPOBOYACÁ
+    "domestico": (5, 5),
+}
+# Valor por planta: siembra + 2 años de mantenimiento (COP), según el tipo de aprovechamiento
+VALOR_POR_PLANTA = {
+    "unico": 41_000,
+    "domestico": 110_000,
+}
+
 ESPECIES_SIEMBRA_DEFECTO = (
     "Myrcia tomentosa, Juglans neotropica, Quercus humboldtii, Alnus acuminata, "
     "Tabebuia chrysantha, Furcraea spp., Weinmannia tomentosa, Ocotea spp., "
@@ -116,13 +127,22 @@ class DatosParteB:
     n_no_amenazados: int = 0
     n_amenazados: int = 0
     especies_siembra: str = ESPECIES_SIEMBRA_DEFECTO
-    valor_por_planta: float = 107_359.105
+    valor_por_planta: float = VALOR_POR_PLANTA["unico"]
+    tipo_aprovechamiento: str = "unico"
 
     @property
     def n_plantas(self) -> int:
         return self.plantas_por_arbol * self.n_no_amenazados + self.plantas_por_arbol_amenazado * self.n_amenazados
 
     def texto_compensacion(self) -> str:
+        if self.plantas_por_arbol == self.plantas_por_arbol_amenazado:
+            n = self.n_no_amenazados + self.n_amenazados
+            return (
+                "Con la finalidad de mitigar el impacto ambiental y recuperar parcialmente los beneficios "
+                f"ecológicos de los árboles talados, se propone la siembra de {_numero_letras(self.plantas_por_arbol)} "
+                f"({self.plantas_por_arbol}) nuevos individuos por cada árbol talado. "
+                f"Para los {n} árboles a aprovechar se sembrarán {self.n_plantas} individuos."
+            )
         return (
             "Con la finalidad de mitigar el impacto ambiental y recuperar parcialmente los beneficios "
             f"ecológicos de los árboles talados, se propone la siembra de {_numero_letras(self.plantas_por_arbol)} "
@@ -196,8 +216,14 @@ def calcular_parte_b(
     contar_veda: bool = False,
     area_predio_ha: float | None = None,
     relieve=None,
+    tipo_aprovechamiento: str = "unico",
 ) -> DatosParteB:
     d = DatosParteB()
+    if tipo_aprovechamiento not in RELACION_SIEMBRA:
+        raise ValueError(f"Tipo de aprovechamiento no válido: {tipo_aprovechamiento}")
+    d.tipo_aprovechamiento = tipo_aprovechamiento
+    d.plantas_por_arbol, d.plantas_por_arbol_amenazado = RELACION_SIEMBRA[tipo_aprovechamiento]
+    d.valor_por_planta = VALOR_POR_PLANTA[tipo_aprovechamiento]
     d.especies = especies_inventario(inv, precios, contar_veda)
     n = len(inv.arboles)
     vol = sum(a.vt for a in inv.arboles)
