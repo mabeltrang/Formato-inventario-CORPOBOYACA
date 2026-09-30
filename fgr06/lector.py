@@ -128,6 +128,12 @@ def _buscar_encabezados(ws) -> tuple[int, dict, list[tuple[str, int]]]:
             ((RE_CAP.match(t).group(1).upper(), c) for c, t in textos.items() if RE_CAP.match(t)),
             key=lambda x: x[0],
         )
+        # Unidad del CAP según el encabezado de "CAP A": (cm) o (m). Sin unidad → se decide por los datos.
+        texto_cap_a = next((t for t in textos.values() if RE_CAP.match(t) and RE_CAP.match(t).group(1) == "a"), "")
+        if "cm" in texto_cap_a:
+            cols["_unidad_cap"] = "cm"
+        elif "(m)" in texto_cap_a:
+            cols["_unidad_cap"] = "m"
         return r, cols, caps
     raise ErrorFormato(
         "No encontré la fila de encabezados (debe tener 'ID' y al menos una columna 'CAP A (m)')."
@@ -168,6 +174,20 @@ def leer_inventario(archivo, factor_forma: float = FACTOR_FORMA_DEFECTO) -> Inve
 
     inv = Inventario(hoja=nombre_hoja, **_metadatos(ws_v, fila_enc))
 
+    # Factor para llevar el CAP a metros
+    unidad_cap = cols.pop("_unidad_cap", None)
+    if unidad_cap is None:
+        muestra = [
+            _num(ws_v.cell(r, caps_cols[0][1]).value) or _num(ws_f.cell(r, caps_cols[0][1]).value)
+            for r in range(fila_enc + 1, min(ws_f.max_row, fila_enc + 60) + 1)
+        ]
+        muestra = sorted(v for v in muestra if v and v > 0)
+        unidad_cap = "cm" if muestra and muestra[len(muestra) // 2] > 5 else "m"
+        inv.avisos.append(
+            f"El encabezado de CAP A no indica unidad; por los valores se asumió CAP en {unidad_cap}."
+        )
+    factor_cap = 0.01 if unidad_cap == "cm" else 1.0
+
     def valor(r, clave):
         c = cols.get(clave)
         if c is None:
@@ -203,7 +223,7 @@ def leer_inventario(archivo, factor_forma: float = FACTOR_FORMA_DEFECTO) -> Inve
             if v is None:
                 v = _num(ws_f.cell(r, c).value)
             if v is not None and v > 0:
-                caps.append(v)
+                caps.append(v * factor_cap)
             elif v is not None and v < 0:
                 inv.errores.append(f"{ref}: CAP {letra} negativo ({v}).")
         if not caps:
