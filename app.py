@@ -65,7 +65,14 @@ if kmz is not None:
     except Exception as e:  # noqa: BLE001
         avisos_predio.append(f"No se pudo leer el KMZ ({e}); el área del predio queda vacía en el Excel.")
 
-datos_b = calcular_parte_b(inv, cargar_precios(), area_predio_ha=area, relieve=relieve)
+tipo = st.radio(
+    "Tipo de aprovechamiento",
+    ["unico", "domestico"],
+    format_func=lambda t: {"unico": "Único · 10 plantas por árbol (15 si está amenazado) · $41.000 c/u",
+                           "domestico": "Doméstico · 5 plantas por árbol · $110.000 c/u"}[t],
+    horizontal=True,
+)
+datos_b = calcular_parte_b(inv, cargar_precios(), area_predio_ha=area, relieve=relieve, tipo_aprovechamiento=tipo)
 
 # --- Avisos --------------------------------------------------------------------
 _, avisos_coord = filas_fgr(inv, DECIMALES_SEG)
