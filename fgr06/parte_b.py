@@ -62,7 +62,7 @@ RELACION_SIEMBRA = {
 # Valor por planta: siembra + 2 años de mantenimiento (COP), según el tipo de aprovechamiento
 VALOR_POR_PLANTA = {
     "unico": 110_000,
-    "domestico": 41_000,
+    "domestico": 22_000,
 }
 
 ESPECIES_SIEMBRA_DEFECTO = (
