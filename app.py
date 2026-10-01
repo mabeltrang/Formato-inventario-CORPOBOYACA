@@ -69,7 +69,7 @@ tipo = st.radio(
     "Tipo de aprovechamiento",
     ["unico", "domestico"],
     format_func=lambda t: {"unico": "Único · 10 plantas por árbol (15 si está amenazado) · $110.000 c/u",
-                           "domestico": "Doméstico · 5 plantas por árbol · $41.000 c/u"}[t],
+                           "domestico": "Doméstico · 5 plantas por árbol · $22.000 c/u"}[t],
     horizontal=True,
 )
 datos_b = calcular_parte_b(inv, cargar_precios(), area_predio_ha=area, relieve=relieve, tipo_aprovechamiento=tipo)
