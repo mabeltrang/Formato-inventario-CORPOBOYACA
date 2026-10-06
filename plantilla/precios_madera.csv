@@ -1,43 +1,44 @@
 nombre_cientifico,nombre_comun,precio_cop_m3_en_pie,fuente,fecha
-Eucalyptus camaldulensis,Eucalipto,300000,FGR-06 Firavitoba Occidente T123 (valor usado por Unergy),2026-05
-Eucalyptus globulus,Eucalipto blanco,,,
-Eucalyptus grandis,Eucalipto grandis,,,
-Eucalyptus saligna,Eucalipto saligna,,,
-Eucalyptus sp,Eucalipto,300000,Mismo valor de E. camaldulensis (respaldo por género),2026-05
-Pinus patula,Pino pátula,,,
-Pinus radiata,Pino radiata,,,
-Pinus oocarpa,Pino oocarpa,,,
-Pinus caribaea,Pino caribe,,,
-Pinus sp,Pino,590000,FGR-06 Firavitoba Occidente T123 (valor usado por Unergy),2026-05
-Cupressus lusitanica,Ciprés,,,
-Acacia melanoxylon,Acacia negra,,,
-Acacia decurrens,Acacia gris,,,
-Acacia mangium,Acacia mangium,,,
-Alnus acuminata,Aliso,650000,FGR-06 Firavitoba Occidente T123 (valor usado por Unergy),2026-05
-Fraxinus uhdei,Urapán,,,
-Sambucus nigra,Sauco,,,
-Salix humboldtiana,Sauce,,,
-Tecoma stans,Chicalá,,,
-Schinus molle,Falso pimiento,,,
-Croton magdalenensis,Drago,,,
-Cordia alliodora,Nogal cafetero,,,
-Tectona grandis,Teca,,,
-Gmelina arborea,Melina,,,
-Tabebuia rosea,Ocobo / Roble morado,,,
-Handroanthus chrysanthus,Guayacán amarillo,,,
-Samanea saman,Samán,,,
-Ceiba pentandra,Ceiba,,,
-Anacardium excelsum,Caracolí,,,
-Enterolobium cyclocarpum,Orejero,,,
-Pseudosamanea guachapele,Igua,,,
-Guazuma ulmifolia,Guácimo,,,
-Gliricidia sepium,Matarratón,,,
-Hura crepitans,Ceiba blanca / Tronador,,,
-Albizia niopoides,Guacamayo,,,
-Prosopis juliflora,Trupillo,,,
-Azadirachta indica,Nim,,,
-Mangifera indica,Mango,,,
-Cedrela odorata,Cedro,,,
-Cedrela montana,Cedro de montaña,,,
-Quercus humboldtii,Roble andino (veda nacional),,,
-Juglans neotropica,Nogal (veda nacional),,,
+Pinus sp,Pino,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus patula,Pino pátula,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus radiata,Pino radiata,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus oocarpa,Pino oocarpa,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus maximinoi,Pino maximinoi,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus tecunumanii,Pino tecunumanii,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus caribaea,Pino caribe,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Pinus kesiya,Pino kesiya,221000,"Dictamen López Cadena 2020 (pino: 78 % aserrío $185.000 + 22 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Cupressus sp,Ciprés,221000,"Homologado a pino (conífera de plantación, mismo mercado) - estimación del profesional",2026-01 (IPC dic-2025)
+Cupressus lusitanica,Ciprés,221000,"Homologado a pino (conífera de plantación, mismo mercado) - estimación del profesional",2026-01 (IPC dic-2025)
+Eucalyptus sp,Eucalipto,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus globulus,Eucalipto blanco,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus camaldulensis,Eucalipto rojo,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus grandis,Eucalipto grandis,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus saligna,Eucalipto saligna,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus viminalis,Eucalipto,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus tereticornis,Eucalipto,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus urophylla,Eucalipto,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Eucalyptus nitens,Eucalipto,167000,"Dictamen López Cadena 2020 (eucalipto: 52 % aserrío $185.000 + 48 % pulpa $40.000 en pie), IPC a dic-2025",2026-01 (IPC dic-2025)
+Corymbia citriodora,Eucalipto limón,167000,Homologado a eucalipto (latifoliada de plantación con aserrío parcial) - estimación del profesional,2026-01 (IPC dic-2025)
+Acacia melanoxylon,Acacia negra / japonesa,167000,Homologado a eucalipto (latifoliada de plantación con aserrío parcial) - estimación del profesional,2026-01 (IPC dic-2025)
+Acacia decurrens,Acacia gris,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Acacia mearnsii,Acacia negra (mearnsii),58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Acacia baileyana,Acacia morada,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Acacia sp,Acacia,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Alnus acuminata,Aliso,167000,Homologado a eucalipto (latifoliada de plantación con aserrío parcial) - estimación del profesional,2026-01 (IPC dic-2025)
+Grevillea robusta,Gravilea,167000,Homologado a eucalipto (latifoliada de plantación con aserrío parcial) - estimación del profesional,2026-01 (IPC dic-2025)
+Fraxinus uhdei,Urapán,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Fraxinus sp,Fresno / Urapán,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Fraxinus angustifolia,Fresno,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Salix humboldtiana,Sauce,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Salix babylonica,Sauce llorón,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Salix purpurea,Sauce púrpura,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Salix sp,Sauce,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Sambucus nigra,Sauco,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Schinus molle,Falso pimiento,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Ligustrum lucidum,Jazmín de la China,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Pittosporum undulatum,Jazmín de monte,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Tecoma stans,Chicalá,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Croton magdalenensis,Drago,58000,Homologado a pulpa/leña (sin mercado de aserrío en pie) - estimación del profesional,2026-01 (IPC dic-2025)
+Quercus humboldtii,Roble andino (veda nacional),,Veda nacional: no se asigna valor comercial,
+Juglans neotropica,Nogal (veda nacional),,Veda nacional: no se asigna valor comercial,
+Cedrela montana,Cedro de montaña,,Sin referencia en pie,
