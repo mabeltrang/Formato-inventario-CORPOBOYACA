@@ -35,9 +35,10 @@ def test_amenazas():
 
 def test_precios_respaldo_por_genero():
     df = cargar_precios()
-    assert buscar_precio(df, "Alnus acuminata") == (650000.0, "especie")
-    assert buscar_precio(df, "Eucalyptus globulus")[1] == "género"
-    assert buscar_precio(df, "Fraxinus uhdei") == (None, "sin precio")
+    assert buscar_precio(df, "Pinus patula")[1] == "especie"
+    assert buscar_precio(df, "Eucalyptus dunnii")[1] == "género"
+    assert buscar_precio(df, "Hesperocyparis lusitanica")[1] == "sinónimo"
+    assert buscar_precio(df, "Quercus humboldtii") == (None, "sin precio")
 
 
 def test_kmz_area_y_pendiente():
