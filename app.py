@@ -1,8 +1,9 @@
 """Conversor de inventario forestal → FGR-06 CORPOBOYACÁ (Parte A y Parte B).
 
 Sube el inventario (y opcionalmente el KMZ del predio) y descarga el Excel.
-Todos los valores se calculan con los supuestos por defecto de fgr06/parte_b.py;
-lo que haga falta se ajusta directamente en el Excel.
+Todos los valores se calculan con los supuestos por defecto de fgr06/parte_b.py.
+El precio por m³ se puede escribir en la pestaña Especies (las especies sin precio
+de referencia quedan vacías) y pasa directo al Excel; lo demás se ajusta en el Excel.
 
 Ejecutar:  streamlit run app.py
 """
@@ -79,7 +80,8 @@ _, avisos_coord = filas_fgr(inv, DECIMALES_SEG)
 sin_precio = [f.nombre_cientifico for f in datos_b.especies if f.precio is None]
 avisos = inv.avisos + avisos_coord + avisos_predio
 if sin_precio:
-    avisos.append("Sin precio por m³ (llenar en el Excel): " + ", ".join(sin_precio) + ".")
+    avisos.append("Sin precio por m³ de referencia: " + ", ".join(sin_precio)
+                  + ". Escríbelo en la pestaña *Especies* antes de descargar.")
 if kmz is None:
     avisos.append("Sin KMZ: área del predio, altitud y pendiente quedan vacías en el Excel.")
 
@@ -100,43 +102,48 @@ st.caption(
     f"**Ubicación:** {inv.ubicacion or '—'} · **Fecha:** {inv.fecha or '—'}"
 )
 
-if inv.arboles:
-    nombre = re.sub(r"[^\w\-]+", "_", inv.proyecto or archivo.name.rsplit(".", 1)[0]).strip("_")
-    st.download_button(
-        "⬇️ Descargar FGR-06 (Excel)",
-        data=generar_fgr06(inv, DECIMALES_SEG, parte_b=datos_b),
-        file_name=f"FGR-06_Inventario_{nombre}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        type="primary",
-    )
+zona_descarga = st.container()
 
-# --- Vista rápida (solo lectura) ------------------------------------------------
+# --- Vista rápida ---------------------------------------------------------------
 tab_a, tab_esp, tab_b = st.tabs(["Parte A", "Especies", "Parte B"])
 
 with tab_a:
     st.dataframe(tabla_arboles(inv, DECIMALES_SEG), hide_index=True, width="stretch")
 
 with tab_esp:
-    st.dataframe(
-        pd.DataFrame([
-            {
-                "Nombre científico": f.nombre_cientifico,
-                "Nombre común": f.nombre_comun,
-                "N° árboles": f.n_arboles,
-                "Volumen (m³)": round(f.volumen, 3),
-                "Amenaza / veda": f.amenaza,
-                "Plantas por árbol": datos_b.plantas_por_arbol_amenazado if f.amenazada else datos_b.plantas_por_arbol,
-                "Precio ($/m³)": f.precio,
-                "Valor comercial ($)": round(f.volumen * f.precio) if f.precio else None,
-            }
-            for f in datos_b.especies
-        ]),
+    st.caption("El precio ($/m³ en pie) es editable: las celdas vacías son especies sin precio de referencia. "
+               "Lo que escribas aquí es lo que sale en el Excel.")
+    tabla_esp = pd.DataFrame([
+        {
+            "Nombre científico": f.nombre_cientifico,
+            "Nombre común": f.nombre_comun,
+            "N° árboles": f.n_arboles,
+            "Volumen (m³)": round(f.volumen, 3),
+            "Amenaza / veda": f.amenaza,
+            "Plantas por árbol": datos_b.plantas_por_arbol_amenazado if f.amenazada else datos_b.plantas_por_arbol,
+            "Precio ($/m³)": f.precio,
+            "Origen del precio": f.origen_precio if f.precio is not None else "—",
+        }
+        for f in datos_b.especies
+    ])
+    editada = st.data_editor(
+        tabla_esp,
         hide_index=True, width="stretch",
+        disabled=[c for c in tabla_esp.columns if c != "Precio ($/m³)"],
         column_config={
-            "Precio ($/m³)": st.column_config.NumberColumn(format="$ %d"),
-            "Valor comercial ($)": st.column_config.NumberColumn(format="$ %d"),
+            "Precio ($/m³)": st.column_config.NumberColumn(format="$ %d", min_value=0, step=1000),
         },
+        key="precios_especies",
     )
+    for f, precio in zip(datos_b.especies, editada["Precio ($/m³)"]):
+        if pd.notna(precio) and precio != f.precio:
+            f.precio, f.origen_precio = float(precio), "manual"
+        elif pd.isna(precio):
+            f.precio = None
+    valor_total = sum(f.volumen * f.precio for f in datos_b.especies if f.precio)
+    faltan = [f.nombre_cientifico for f in datos_b.especies if f.precio is None]
+    st.markdown(f"**Valor comercial total:** $ {valor_total:,.0f}"
+                + (f" · faltan precios para: {', '.join(faltan)}" if faltan else ""))
 
 
 def _gms(v):
@@ -169,3 +176,16 @@ with tab_b:
     st.dataframe(pd.DataFrame(filas, columns=["Campo", "Valor"]), hide_index=True, width="stretch")
     st.markdown("**Texto de compensación para el informe:**")
     st.code(d.texto_compensacion(), language=None, wrap_lines=True)
+
+
+# --- Descarga (se arma al final para incluir los precios editados) --------------
+if inv.arboles:
+    with zona_descarga:
+        nombre = re.sub(r"[^\w\-]+", "_", inv.proyecto or archivo.name.rsplit(".", 1)[0]).strip("_")
+        st.download_button(
+            "⬇️ Descargar FGR-06 (Excel)",
+            data=generar_fgr06(inv, DECIMALES_SEG, parte_b=datos_b),
+            file_name=f"FGR-06_Inventario_{nombre}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            type="primary",
+        )
