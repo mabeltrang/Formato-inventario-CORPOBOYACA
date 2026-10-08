@@ -59,7 +59,8 @@ RELACION_SIEMBRA = {
     "unico": (10, 15),      # valores indicados por CORPOBOYACÁ
     "domestico": (5, 5),
 }
-# Valor por planta: siembra + 2 años de mantenimiento (COP), según el tipo de aprovechamiento
+# Valor por planta (COP). En aprovechamiento único la app lo reemplaza por el costo de
+# compensación ÷ N plantas (fgr06/costos.py), para que coincida con el FGR-29.
 VALOR_POR_PLANTA = {
     "unico": 110_000,
     "domestico": 22_000,
