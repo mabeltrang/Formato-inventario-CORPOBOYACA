@@ -18,6 +18,7 @@ import pandas as pd
 
 from fgr06 import ErrorFormato, filas_fgr, generar_fgr06, leer_inventario, tabla_arboles
 from fgr06.calculos import decimal_a_gms
+from fgr06.firma import cargar_firma
 from fgr06.costos import (FIRMANTE_AISLADOS, DatosFGR29, Tarifas, costo_aprovechamiento, costo_compensacion,
                           generar_fgr29, generar_tablas_informe, totales_fgr29)
 from fgr06.parte_b import calcular_parte_b
@@ -33,6 +34,13 @@ def _hay_secrets() -> bool:
         return "firmante_aislados" in st.secrets
     except Exception:  # noqa: BLE001  (sin archivo de secrets)
         return False
+
+
+def _secret(clave: str):
+    try:
+        return st.secrets.get(clave)
+    except Exception:  # noqa: BLE001  (sin archivo de secrets)
+        return None
 
 
 def pesos(v: float) -> str:
@@ -131,12 +139,15 @@ if UNICO:
     firmante = {**FIRMANTE_AISLADOS, **dict(st.secrets.get("firmante_aislados", {}))} \
         if _hay_secrets() else FIRMANTE_AISLADOS
     datos_b.firmante = firmante["nombre"]
+    firma_png = cargar_firma(_secret("firma_aislados_png_b64"))
+    datos_b.firma_png = firma_png
 
     st.subheader("Costos (FGR-29)")
     c1, c2 = st.columns(2)
     valor_predio = c1.number_input("Contrato de arriendo o servidumbre ($)", value=0, step=1_000_000, min_value=0)
     canon = c2.number_input("Canon de arrendamiento anual ($)", value=0, step=100_000, min_value=0)
-    datos_29 = DatosFGR29(vol, comp, t, valor_predio=valor_predio, canon_anual=canon, **firmante)
+    datos_29 = DatosFGR29(vol, comp, t, valor_predio=valor_predio, canon_anual=canon, firma_png=firma_png,
+                          **firmante)
     tot29 = totales_fgr29(datos_29)
 
     m1, m2, m3, m4 = st.columns(4)
@@ -144,7 +155,8 @@ if UNICO:
     m2.metric("Compensación", pesos(comp.total), help=f"{comp.n_plantas} plantas, siembra y 3 años de mantenimiento")
     m3.metric(f"Imprevistos ({comp.pct_imprevistos:.0%})", pesos(comp.imprevistos))
     m4.metric("Total FGR-29", pesos(tot29["total"]))
-    st.caption(f"Firma: {firmante['nombre']} · C.C. {firmante['identificacion']}")
+    st.caption(f"Firma: {firmante['nombre']} · C.C. {firmante['identificacion']}"
+               + (" · con firma escaneada" if firma_png else " · sin firma escaneada"))
 else:
     datos_b.firmante = inv.propietario or ""
     if datos_b.firmante:
