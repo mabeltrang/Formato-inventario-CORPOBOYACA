@@ -33,56 +33,50 @@ MESES = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto
 
 @dataclass
 class Tarifas:
-    """Precios y rendimientos base (COP). Editables en la app."""
+    """Formato estándar de costos de compensación (Unergy). Solo dependen de N plantas:
+    plántulas (N), tutores (1,5 × N) y reposición (10 % de N). Todo lo demás es fijo."""
 
     # Aprovechamiento ($/m³ de volumen total)
     tala_m3: float = 100_000
     transporte_menor_m3: float = 90_000
-    # Mano de obra
-    jornal: float = 100_000
-    jornal_profesional: float = 205_000          # marcación y georreferenciación
-    # Rendimientos (plantas por jornal)
-    rend_roceria: float = 30
-    rend_trazado: float = 50
-    rend_hoyado: float = 30
-    rend_plateo: float = 30
-    rend_transporte: float = 50
-    rend_siembra: float = 30
-    rend_fertilizacion: float = 50
-    rend_marcacion: float = 50
+    # Mano de obra siembra inicial: (ítem, unidad, cantidad, valor unidad) — fija
+    mano_obra: tuple = (
+        ("Rocería", "Jornal", 5, 100_000),
+        ("Trazado", "Jornal", 3, 100_000),
+        ("Hoyado", "Jornal", 5, 100_000),
+        ("Plateo", "Jornal", 5, 100_000),
+        ("Transporte y distribución", "Jornal", 3, 100_000),
+        ("Siembra", "Jornal", 5, 100_000),
+        ("Aplicación de fertilizantes", "Jornal", 3, 100_000),
+        ("Marcación y georreferenciación", "Jornal", 3, 205_000),
+    )
     # Insumos
     plantula: float = 25_000
-    fertilizante_g_planta: float = 100
-    fertilizante_bulto_kg: float = 25
-    fertilizante_bulto: float = 70_000
-    micorrizas_g_planta: float = 50
-    micorrizas_kg: float = 4_000
-    hidroretenedor_g_planta: float = 5
-    hidroretenedor_kg: float = 40_000
     tutores_por_planta: float = 1.5
     tutor: float = 4_000
-    plantas_por_rollo_cabuya: float = 14
-    cabuya_rollo: float = 45_900
-    plantas_por_viaje: float = 15
-    viaje_transporte: float = 200_000
-    placas: int = 5
-    placa: float = 160_000
-    # Herramientas: un kit por cada `plantas_por_kit`
-    plantas_por_kit: float = 150
-    kit_herramientas: dict[str, float] = field(default_factory=lambda: {
-        "Azadón": 45_000, "Pala": 80_000, "Pala coca": 94_000, "Barra": 150_000,
-        "Carretilla": 200_000, "EPP's": 150_000, "Limas": 23_000,
-    })
-    # Mantenimiento (3 años: 3 + 2 + 2 visitas)
-    visitas_mantenimiento: int = 7
-    pct_resiembra: float = 0.10
-    plantas_por_jornal_mant: float = 60          # plateo y rocería en cada visita
-    visita_fija: dict[str, float] = field(default_factory=lambda: {
-        "Control fitosanitario": 20_000, "Micorrizas": 4_000, "Fertilizantes": 7_000,
-        "Hidroretenedor": 4_000, "Tutor": 4_000, "Cabuya": 25_000,
-        "Transporte a sitio de siembra": 200_000, "Monitoreo de variables": 200_000,
-        "Herramientas": 59_500,
-    })
+    insumos_fijos: tuple = (
+        ("Fertilizante (100 g/árbol)", "Bulto 25 kg", 5, 70_000),
+        ("Micorrizas (50 g/árbol)", "1 kg", 50, 4_000),
+        ("Hidroretenedor (5 g hidratado)", "1 kg", 10, 40_000),
+        ("Cabuya", "1 rollo", 10, 45_900),
+        ("Transporte a sitio de siembra", "Jornal", 10, 200_000),
+        ("Placas", "Und", 5, 160_000),
+    )
+    herramientas: tuple = (
+        ("Azadón", "Und", 1, 45_000), ("Pala", "Und", 1, 80_000), ("Pala coca", "Und", 1, 94_000),
+        ("Barra", "Und", 1, 150_000), ("Carretilla", "Und", 1, 200_000), ("EPP's", "Und", 1, 150_000),
+        ("Limas", "Und", 1, 23_000),
+    )
+    # Reposición, mantenimiento y monitoreo (3 años)
+    pct_reposicion: float = 0.10
+    valor_reposicion: float = 520_505             # por individuo repuesto
+    mantenimiento_fijo: tuple = (
+        ("Control fitosanitario", "", 1, 20_000), ("Micorrizas", "", 1, 4_000), ("Fertilizantes", "", 1, 7_000),
+        ("Hidroretenedor", "", 1, 4_000), ("Tutor", "", 1, 4_000), ("Cabuya", "", 1, 25_000),
+        ("Transporte a sitio de siembra", "", 1, 200_000), ("Monitoreo de variables", "", 1, 200_000),
+        ("Herramientas", "", 1, 59_500),
+    )
+    # Imprevistos: % sobre el subtotal de reposición, mantenimiento y monitoreo
     pct_imprevistos: float = 0.05
 
     @property
@@ -126,7 +120,8 @@ class Compensacion:
 
     @property
     def imprevistos(self) -> float:
-        return round(sum(self.subtotales.values()) * self.pct_imprevistos)
+        # Igual que el formato estándar: 5 % del subtotal de reposición, mantenimiento y monitoreo
+        return self._suma(self.mantenimiento) * self.pct_imprevistos
 
     @property
     def total(self) -> float:
@@ -143,48 +138,16 @@ def costo_aprovechamiento(volumen_m3: float, t: Tarifas) -> list[Item]:
 
 
 def costo_compensacion(n: int, t: Tarifas) -> Compensacion:
-    c = math.ceil
-    j = t.jornal
-    mano_obra = [
-        Item("Rocería", "Jornal", c(n / t.rend_roceria), j),
-        Item("Trazado", "Jornal", c(n / t.rend_trazado), j),
-        Item("Hoyado", "Jornal", c(n / t.rend_hoyado), j),
-        Item("Plateo", "Jornal", c(n / t.rend_plateo), j),
-        Item("Transporte y distribución", "Jornal", c(n / t.rend_transporte), j),
-        Item("Siembra", "Jornal", c(n / t.rend_siembra), j),
-        Item("Aplicación de fertilizantes", "Jornal", c(n / t.rend_fertilizacion), j),
-        Item("Marcación y georreferenciación", "Jornal", c(n / t.rend_marcacion), t.jornal_profesional),
-    ]
-    kg = lambda g: round(n * g / 1000, 2)  # noqa: E731
-    insumos = [
-        Item("Plántulas", "Und", n, t.plantula),
-        Item(f"Fertilizante ({t.fertilizante_g_planta:g} g/planta)", f"Bulto {t.fertilizante_bulto_kg:g} kg",
-             c(kg(t.fertilizante_g_planta) / t.fertilizante_bulto_kg), t.fertilizante_bulto),
-        Item(f"Micorrizas ({t.micorrizas_g_planta:g} g/planta)", "kg", kg(t.micorrizas_g_planta), t.micorrizas_kg),
-        Item(f"Hidroretenedor ({t.hidroretenedor_g_planta:g} g/planta)", "kg",
-             kg(t.hidroretenedor_g_planta), t.hidroretenedor_kg),
-        Item(f"Tutor ({t.tutores_por_planta:g}/planta)", "Und", c(n * t.tutores_por_planta), t.tutor),
-        Item("Cabuya", "Rollo", c(n / t.plantas_por_rollo_cabuya), t.cabuya_rollo),
-        Item("Transporte a sitio de siembra", "Viaje", c(n / t.plantas_por_viaje), t.viaje_transporte),
-        Item("Placas", "Und", t.placas, t.placa),
-    ]
-    kits = c(n / t.plantas_por_kit) if n else 0
-    herramientas = [Item(nombre, "Und", kits, v) for nombre, v in t.kit_herramientas.items()]
-
-    # Resiembra: plantas reales con su plántula e insumos de siembra
-    n_res = c(n * t.pct_resiembra)
-    insumo_planta = (
-        t.plantula
-        + t.fertilizante_g_planta / 1000 / t.fertilizante_bulto_kg * t.fertilizante_bulto
-        + t.micorrizas_g_planta / 1000 * t.micorrizas_kg
-        + t.hidroretenedor_g_planta / 1000 * t.hidroretenedor_kg
-        + t.tutores_por_planta * t.tutor
-    )
-    v = t.visitas_mantenimiento
-    mantenimiento = [Item(f"Resiembra ({t.pct_resiembra:.0%})", "Planta", n_res, round(insumo_planta))]
-    mantenimiento += [Item(nombre, "Visita", v, valor) for nombre, valor in t.visita_fija.items()]
-    mantenimiento.append(Item("Plateo y rocería de mantenimiento", "Jornal", v * c(n / t.plantas_por_jornal_mant), j))
-
+    """Formato estándar: solo cambian plántulas, tutores, reposición (10 %) e imprevistos."""
+    a_items = lambda filas: [Item(*f) for f in filas]  # noqa: E731
+    mano_obra = a_items(t.mano_obra)
+    insumos = [Item("Plántulas", "Und", n, t.plantula)] + a_items(t.insumos_fijos[:3])
+    insumos.append(Item(f"Tutor ({t.tutores_por_planta:g}/árbol)", "Und", math.ceil(n * t.tutores_por_planta), t.tutor))
+    insumos += a_items(t.insumos_fijos[3:])
+    herramientas = a_items(t.herramientas)
+    mantenimiento = [Item(f"Reposición ({t.pct_reposicion:.0%})", "Und", math.ceil(round(n * t.pct_reposicion, 6)),
+                          t.valor_reposicion)]
+    mantenimiento += a_items(t.mantenimiento_fijo)
     return Compensacion(n, mano_obra, insumos, herramientas, mantenimiento, t.pct_imprevistos)
 
 
@@ -335,9 +298,9 @@ def generar_tablas_informe(volumen_m3: float, comp: Compensacion, t: Tarifas) ->
         _fila(ws, r, ["Total", None, None, None, f"=SUM(E{ini}:E{r - 1})"], negrita=True, gris=True, formatos=fmt)
         subtotales.append((titulo, r))
         r += 1
-    suma = "+".join(f"E{fila}" for _, fila in subtotales)
+    fila_mant = subtotales[-1][1]          # imprevistos sobre reposición, mantenimiento y monitoreo
     _fila(ws, r, [f"Imprevistos ({comp.pct_imprevistos:.0%})", None, None, comp.pct_imprevistos,
-                  f"=ROUND(({suma})*D{r},0)"], negrita=True, formatos={4: "0%", 5: _PESOS})
+                  f"=E{fila_mant}*D{r}"], negrita=True, formatos={4: "0%", 5: _PESOS})
     r_imp = r
     r += 2
     _fila(ws, r, ["Valor total compensación (3 años)", None, None, None, None], negrita=True, gris=True)
