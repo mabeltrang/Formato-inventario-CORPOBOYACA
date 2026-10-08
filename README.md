@@ -51,8 +51,7 @@ hoja **Inventario**) en la **Parte A – Inventario Forestal al 100 %** del form
 
 ## Costos y FGR-29 (solo árboles aislados)
 
-La app detecta el **tipo de aprovechamiento** por el volumen total (hasta 20 m³ es aislados de uso doméstico; más, árboles aislados).
-Se puede cambiar a mano:
+La app define el **tipo de aprovechamiento** por el volumen total del inventario (no se elige):
 
 - **Aislados de uso doméstico**: entrega solo el FGR-06 (inventario, Parte A y B). 5 plantas por árbol.
 - **Árboles aislados**: entrega además el **FGR-29** (autodeclaración de costos) y las **tablas de costos del
@@ -72,7 +71,13 @@ compensación, imprevistos y total del FGR-29. Las tarifas son estándar y no se
 en uso doméstico firma el propietario que viene en el inventario. Para no dejar el número de cédula en un repo
 público, se puede quitar de `FIRMANTE_AISLADOS` (`fgr06/costos.py`) y ponerlo en los *secrets* de Streamlit Cloud:
 
+Firma escaneada (FGR-29 y FGR-06, solo árboles aislados): `fgr06/firma.py` la busca primero en el secret
+`firma_aislados_png_b64` (PNG en base64) y, si no está, en `plantilla/firmas/firma_aislados.png`. Las plantillas
+ya no traen ninguna firma pegada.
+
 ```toml
+firma_aislados_png_b64 = "iVBORw0KGgo..."
+
 [firmante_aislados]
 nombre = "Eduardo Andrés Ospina Serrano"
 identificacion = "..."
