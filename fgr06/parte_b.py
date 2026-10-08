@@ -132,6 +132,7 @@ class DatosParteB:
     tipo_aprovechamiento: str = "unico"
     # Firma del solicitante (aislados: quien firma por Unergy; uso doméstico: el propietario)
     firmante: str = ""
+    firma_png: bytes | None = None    # firma escaneada (solo árboles aislados)
 
     @property
     def n_plantas(self) -> int:
@@ -377,3 +378,7 @@ def escribir_parte_b(wb, d: DatosParteB) -> None:
 
     # Firma del solicitante
     ws["A107"] = f"Firma del solicitante: {d.firmante}" if d.firmante else "Firma del solicitante"
+    if d.firma_png:
+        from .firma import insertar_firma
+
+        insertar_firma(ws, "B106", d.firma_png, alto_px=70)
