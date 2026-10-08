@@ -55,3 +55,14 @@ def test_totales_fgr29_iguales_a_formulas():
     tot = totales_fgr29(d)
     assert tot["inversion"] == pytest.approx(289_476_520)
     assert tot["total"] == tot["inversion"] + tot["operacion"]
+
+
+def test_firma_en_fgr29():
+    from PIL import Image
+
+    png = io.BytesIO()
+    Image.new("RGB", (200, 60), "white").save(png, format="PNG")
+    t = Tarifas()
+    d = DatosFGR29(1.0, costo_compensacion(10, t), t, firma_png=png.getvalue())
+    hoja = openpyxl.load_workbook(io.BytesIO(generar_fgr29(d))).worksheets[1]
+    assert any(im.anchor._from.row + 1 == 66 for im in hoja._images)
