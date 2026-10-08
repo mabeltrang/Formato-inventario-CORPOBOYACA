@@ -49,12 +49,13 @@ hoja **Inventario**) en la **Parte A – Inventario Forestal al 100 %** del form
   - X y Y invertidas (se corrigen solas).
   - Dos árboles que quedan con la misma coordenada en grados, minutos y segundos.
 
-## Costos y FGR-29 (solo aprovechamiento único)
+## Costos y FGR-29 (solo árboles aislados)
 
-La app pide el **tipo de aprovechamiento**:
+La app detecta el **tipo de aprovechamiento** por el volumen total (hasta 20 m³ es aislados de uso doméstico; más, árboles aislados).
+Se puede cambiar a mano:
 
-- **Doméstico**: entrega solo el FGR-06 (inventario, Parte A y B). 5 plantas por árbol.
-- **Único**: entrega además el **FGR-29** (autodeclaración de costos) y las **tablas de costos del
+- **Aislados de uso doméstico**: entrega solo el FGR-06 (inventario, Parte A y B). 5 plantas por árbol.
+- **Árboles aislados**: entrega además el **FGR-29** (autodeclaración de costos) y las **tablas de costos del
   documento técnico**. 10 plantas por árbol (15 si está amenazado).
 
 Los costos salen de `fgr06/costos.py` (`Tarifas`) y de dos datos del inventario:
