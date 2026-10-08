@@ -1,4 +1,4 @@
-"""Costos de aprovechamiento y compensación (solo aprovechamiento ÚNICO).
+"""Costos de aprovechamiento y compensación (solo árboles aislados, no uso doméstico).
 
 Los costos salen de dos datos del inventario:
 
