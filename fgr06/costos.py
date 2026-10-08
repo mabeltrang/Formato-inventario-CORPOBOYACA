@@ -11,7 +11,7 @@ Con esos mismos números se llenan:
 - las tablas de costos del documento técnico (aprovechamiento y reposición a 3 años),
 
 así el FGR-06, el FGR-29 y el informe no se desfasan. Las tarifas por defecto están en
-`Tarifas`; actualízalas ahí una vez al año (o edítalas en la app).
+`Tarifas`; actualízalas ahí una vez al año (en la app no se editan).
 """
 
 from __future__ import annotations
@@ -192,6 +192,17 @@ def costo_compensacion(n: int, t: Tarifas) -> Compensacion:
 # FGR-29
 # ----------------------------------------------------------------------------
 
+# Firma del FGR-29 en árboles aislados. En Streamlit Cloud se puede reemplazar con
+# st.secrets["firmante_aislados"] (nombre, identificacion, direccion, telefono, cargo).
+FIRMANTE_AISLADOS = {
+    "nombre": "Eduardo Andrés Ospina Serrano",
+    "identificacion": "1.152.200.773",
+    "direccion": "Cl 46 # 70 A 65 Laureles - Estadio, Medellín",
+    "telefono": "",
+    "cargo": "",
+}
+
+
 @dataclass
 class DatosFGR29:
     volumen_m3: float
@@ -199,11 +210,11 @@ class DatosFGR29:
     tarifas: Tarifas
     valor_predio: float | None = None       # valor del contrato de arriendo o de la servidumbre
     canon_anual: float | None = None        # arrendamiento anual del predio
-    nombre: str = "Nicolás Villegas Echavarría"
-    identificacion: str = "1.037.625.350"
-    direccion: str = "Cl 46 # 70 A 65 Laureles - Estadio, Medellín"
-    telefono: str = "3226194274"
-    cargo: str = "Representante legal"
+    nombre: str = FIRMANTE_AISLADOS["nombre"]
+    identificacion: str = FIRMANTE_AISLADOS["identificacion"]
+    direccion: str = FIRMANTE_AISLADOS["direccion"]
+    telefono: str = FIRMANTE_AISLADOS["telefono"]
+    cargo: str = FIRMANTE_AISLADOS["cargo"]
     fecha: date = field(default_factory=date.today)
 
 
@@ -234,9 +245,10 @@ def _llenar_fgr29(d: DatosFGR29, plantilla: Path | str = PLANTILLA_FGR29):
     b["A55"] = f"Imprevistos ({d.compensacion.pct_imprevistos:.0%})"
     b["A54"] = "Reposición, mantenimiento y monitoreo (3 años)"
     # Firma
-    b["C62"], b["C63"], b["C64"], b["C65"] = d.nombre, d.identificacion, d.direccion, d.telefono
+    b["C62"], b["C63"], b["C64"], b["C65"] = (v or None for v in (d.nombre, d.identificacion, d.direccion,
+                                                                  d.telefono))
     b["C67"] = f"{MESES[d.fecha.month - 1]}, {anio}"
-    b["C68"] = d.cargo
+    b["C68"] = d.cargo or None
     return wb
 
 
