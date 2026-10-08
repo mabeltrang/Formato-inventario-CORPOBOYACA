@@ -179,6 +179,7 @@ class DatosFGR29:
     telefono: str = FIRMANTE_AISLADOS["telefono"]
     cargo: str = FIRMANTE_AISLADOS["cargo"]
     fecha: date = field(default_factory=date.today)
+    firma_png: bytes | None = None          # firma escaneada (fgr06/firma.py)
 
 
 # Filas con ítems (cantidad en D, valor unitario en E) de cada parte
@@ -212,6 +213,10 @@ def _llenar_fgr29(d: DatosFGR29, plantilla: Path | str = PLANTILLA_FGR29):
                                                                   d.telefono))
     b["C67"] = f"{MESES[d.fecha.month - 1]}, {anio}"
     b["C68"] = d.cargo or None
+    if d.firma_png:
+        from .firma import insertar_firma
+
+        insertar_firma(b, "C66", d.firma_png, alto_px=54)
     return wb
 
 
