@@ -65,8 +65,18 @@ Los costos salen de `fgr06/costos.py` (`Tarifas`) y de dos datos del inventario:
   plántulas e insumos por dosis, herramientas (un kit cada 150 plantas), resiembra del 10 %,
   7 visitas de mantenimiento con jornales que escalan con N, e imprevistos del 5 % sobre el subtotal.
 
-Antes de descargar, la app muestra un resumen (aprovechamiento, compensación, valor por planta y total del
-FGR-29) y avisa si faltan el contrato o el canon. El detalle de cada tabla queda en la pestaña *Costos (FGR-29)*.
+En árboles aislados la app solo pide el contrato de arriendo/servidumbre y el canon, y muestra aprovechamiento,
+compensación, imprevistos y total del FGR-29. Las tarifas son estándar y no se editan en la app.
+
+**Firma:** en árboles aislados firma Eduardo Andrés Ospina Serrano (FGR-29 y "Firma del solicitante" del FGR-06);
+en uso doméstico firma el propietario que viene en el inventario. Para no dejar el número de cédula en un repo
+público, se puede quitar de `FIRMANTE_AISLADOS` (`fgr06/costos.py`) y ponerlo en los *secrets* de Streamlit Cloud:
+
+```toml
+[firmante_aislados]
+nombre = "Eduardo Andrés Ospina Serrano"
+identificacion = "..."
+```
 
 Con los mismos números se llenan:
 
