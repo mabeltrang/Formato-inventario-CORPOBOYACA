@@ -49,6 +49,38 @@ hoja **Inventario**) en la **Parte A – Inventario Forestal al 100 %** del form
   - X y Y invertidas (se corrigen solas).
   - Dos árboles que quedan con la misma coordenada en grados, minutos y segundos.
 
+## Costos y FGR-29 (solo aprovechamiento único)
+
+La app pide el **tipo de aprovechamiento**:
+
+- **Doméstico**: entrega solo el FGR-06 (inventario, Parte A y B). 5 plantas por árbol.
+- **Único**: entrega además el **FGR-29** (autodeclaración de costos) y las **tablas de costos del
+  documento técnico**. 10 plantas por árbol (15 si está amenazado).
+
+Los costos salen de `fgr06/costos.py` (`Tarifas`) y de dos datos del inventario:
+
+- **Aprovechamiento** = volumen total × (tala $100.000/m³ + transporte menor $90.000/m³).
+- **Compensación (3 años)** = f(N plantas): mano de obra de siembra por rendimientos (plantas/jornal),
+  plántulas e insumos por dosis, herramientas (un kit cada 150 plantas), resiembra del 10 %,
+  7 visitas de mantenimiento con jornales que escalan con N, e imprevistos del 5 % sobre el subtotal.
+
+Antes de descargar, la app muestra un resumen (aprovechamiento, compensación, valor por planta y total del
+FGR-29) y avisa si faltan el contrato o el canon. El detalle de cada tabla queda en la pestaña *Costos (FGR-29)*.
+
+Con los mismos números se llenan:
+
+| Dónde | Qué |
+|---|---|
+| FGR-29 · 1.1 fila 10 | Volumen × tarifa de aprovechamiento |
+| FGR-29 · 1.4 | Valor del contrato de arriendo o servidumbre (se escribe en la app). La compensación de 1.4 queda en 0 |
+| FGR-29 · 2.3 | Canon de arrendamiento anual (se escribe en la app) |
+| FGR-29 · 2.6 | Mano de obra, insumos, herramientas, mantenimiento e imprevistos |
+| FGR-06 Parte B · renovabilidad | Valor por planta = total compensación ÷ N |
+| Tablas del informe | Costos de aprovechamiento y costos de reposición a 3 años, con fórmulas |
+
+El resto del FGR-29 (obras, maquinaria, operación de la minigranja) es la plantilla estándar de Unergy en
+`plantilla/FGR-29_v3_plantilla.xlsx`. Actualiza las tarifas una vez al año en `Tarifas`.
+
 ## Amenaza de especies
 
 `fgr06/amenazas/` es una copia de la consulta de amenaza del repo
@@ -68,6 +100,7 @@ Si actualizas las listas en el otro repo, copia de nuevo los CSV a `fgr06/amenaz
 
 `plantilla/precios_madera.csv` tiene las columnas `nombre_cientifico`, `nombre_comun`, `precio_cop_m3_en_pie`, `fuente` y `fecha`.
 
+- Búsqueda: nombre exacto → sinónimo (`plantilla/sinonimos_especies.csv`, p. ej. *Hesperocyparis lusitanica* → *Cupressus lusitanica*) → `Genero sp`.
 - Si la especie no tiene precio, se usa el de `Genero sp` y la app lo avisa.
 - Los precios editados en la app se descargan como CSV actualizado. Súbelo al repo para que queden guardados.
 - Documenta la fuente de cada precio, por ejemplo la cotización de un aserrío local con su fecha.
@@ -83,11 +116,13 @@ fgr06/
   excel_utils.py           Insertar columnas conservando combinaciones y anchos
   resumen.py               Tablas de vista previa y resumen por especie
   parte_b.py               Cálculo y escritura de la Parte B
+  costos.py                Tarifas, costos de aprovechamiento y compensación, FGR-29 y tablas del informe
   predio.py                KMZ: área, árboles dentro del predio, altitud y pendiente (DEM)
   precios.py               Tabla de precios por especie
   amenazas/                MADS / CITES / UICN / vedas (copiado de analisis-compensacion-forestal)
 plantilla/
   FGR-06_v7_plantilla.xlsx          Formato CORPOBOYACÁ limpio (Parte A sin filas, Parte B en blanco)
+  FGR-29_v3_plantilla.xlsx          Autodeclaración de costos con los valores estándar de minigranja
   Plantilla_Inventario_Forestal.xlsx Inventario de campo en blanco (formato propio, con fórmulas)
   crear_plantilla_inventario.py      Regenera la plantilla de inventario
   precios_madera.csv                 Precios de referencia $/m³ en pie
