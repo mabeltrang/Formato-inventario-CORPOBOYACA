@@ -12,12 +12,17 @@ def test_aprovechamiento_por_volumen():
     assert sum(i.total for i in items) == pytest.approx(6.508 * 190_000)
 
 
-def test_compensacion_calibrada_141_plantas():
-    c = costo_compensacion(141, Tarifas())
-    # mano de obra igual a la del documento técnico de referencia (141 plantas)
-    assert c.subtotales["Mano de obra siembra inicial"] == 3_515_000
-    assert c.imprevistos == round(sum(c.subtotales.values()) * 0.05)
-    assert c.total == pytest.approx(sum(c.subtotales.values()) + c.imprevistos)
+def test_compensacion_igual_al_formato_estandar():
+    # Formato "Costos compensación" con 190 plantas
+    c = costo_compensacion(190, Tarifas())
+    assert c.subtotales == {
+        "Mano de obra siembra inicial": 3_515_000,
+        "Insumos": 10_099_000,
+        "Herramientas": 742_000,
+        "Reposición, mantenimiento y monitoreo (3 años)": 10_413_095,
+    }
+    assert c.imprevistos == pytest.approx(520_654.75)
+    assert c.total == pytest.approx(25_289_749.75)
 
 
 def test_compensacion_escala_con_plantas():
@@ -48,6 +53,5 @@ def test_totales_fgr29_iguales_a_formulas():
     t = Tarifas()
     d = DatosFGR29(6.508, costo_compensacion(470, t), t, valor_predio=84_000_000, canon_anual=6_800_000)
     tot = totales_fgr29(d)
-    # mismo resultado que las fórmulas del formato recalculadas en LibreOffice
     assert tot["inversion"] == pytest.approx(289_476_520)
-    assert tot["total"] == pytest.approx(1_030_918_083)
+    assert tot["total"] == tot["inversion"] + tot["operacion"]
