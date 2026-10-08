@@ -18,6 +18,8 @@ import pandas as pd
 
 from fgr06 import ErrorFormato, filas_fgr, generar_fgr06, leer_inventario, tabla_arboles
 from fgr06.calculos import decimal_a_gms
+from fgr06.costos import (DatosFGR29, Tarifas, costo_aprovechamiento, costo_compensacion, generar_fgr29,
+                          generar_tablas_informe, totales_fgr29)
 from fgr06.parte_b import calcular_parte_b
 from fgr06.precios import cargar_precios
 from fgr06.predio import calcular_relieve, leer_kmz
@@ -69,10 +71,11 @@ if kmz is not None:
 tipo = st.radio(
     "Tipo de aprovechamiento",
     ["unico", "domestico"],
-    format_func=lambda t: {"unico": "Único · 10 plantas por árbol (15 si está amenazado) · $110.000 c/u",
-                           "domestico": "Doméstico · 5 plantas por árbol · $22.000 c/u"}[t],
+    format_func=lambda t: {"unico": "Único · 10 plantas por árbol (15 si está amenazado) · FGR-06 + costos (FGR-29)",
+                           "domestico": "Doméstico · 5 plantas por árbol · $22.000 c/u · solo FGR-06"}[t],
     horizontal=True,
 )
+UNICO = tipo == "unico"
 datos_b = calcular_parte_b(inv, cargar_precios(), area_predio_ha=area, relieve=relieve, tipo_aprovechamiento=tipo)
 
 # --- Avisos --------------------------------------------------------------------
@@ -105,7 +108,10 @@ st.caption(
 zona_descarga = st.container()
 
 # --- Vista rápida ---------------------------------------------------------------
-tab_a, tab_esp, tab_b = st.tabs(["Parte A", "Especies", "Parte B"])
+if UNICO:
+    tab_a, tab_esp, tab_costos, tab_b = st.tabs(["Parte A", "Especies", "Costos (FGR-29)", "Parte B"])
+else:
+    tab_a, tab_esp, tab_b = st.tabs(["Parte A", "Especies", "Parte B"])
 
 with tab_a:
     st.dataframe(tabla_arboles(inv, DECIMALES_SEG), hide_index=True, width="stretch")
@@ -146,6 +152,73 @@ with tab_esp:
                 + (f" · faltan precios para: {', '.join(faltan)}" if faltan else ""))
 
 
+def _tabla_items(items):
+    return pd.DataFrame([{"Ítem": i.item, "Unidad": i.unidad, "Cantidad": i.cantidad,
+                          "Valor unitario": i.valor_unidad, "Valor total": i.total} for i in items])
+
+
+FMT_PESOS = {c: st.column_config.NumberColumn(format="$ %d") for c in ("Valor unitario", "Valor total")}
+datos_29 = comp = None
+if UNICO:
+    with tab_costos:
+        st.caption("Los costos salen del volumen (aprovechamiento) y de las plantas a reponer (compensación). "
+                   "Con los mismos valores se llenan el FGR-29, la renovabilidad de la Parte B y las tablas "
+                   "del documento técnico.")
+        st.markdown("**Predio y firma del FGR-29**")
+        c1, c2, c3 = st.columns(3)
+        valor_predio = c1.number_input("Valor del contrato de arriendo o servidumbre ($)", value=0.0, step=1_000_000.0,
+                                       help="Va en 1.4 (valor del predio / servidumbre).")
+        canon = c2.number_input("Canon de arrendamiento anual ($)", value=0.0, step=100_000.0,
+                                help="Va en 2.3. Déjalo en 0 si es servidumbre sin canon.")
+        fecha = c3.date_input("Fecha")
+        t = Tarifas()
+        with st.expander("Tarifas base", expanded=False):
+            c1, c2, c3, c4 = st.columns(4)
+            t.tala_m3 = c1.number_input("Tala ($/m³)", value=float(t.tala_m3), step=5_000.0)
+            t.transporte_menor_m3 = c2.number_input("Transporte menor ($/m³)", value=float(t.transporte_menor_m3), step=5_000.0)
+            t.jornal = c3.number_input("Jornal ($)", value=float(t.jornal), step=5_000.0)
+            t.plantula = c4.number_input("Plántula ($)", value=float(t.plantula), step=1_000.0)
+            st.caption("Rendimientos e insumos: `fgr06/costos.py` → `Tarifas`.")
+        aprov = costo_aprovechamiento(vol, t)
+        comp = costo_compensacion(datos_b.n_plantas, t)
+        # La renovabilidad de la Parte B usa el mismo costo por planta
+        datos_b.valor_por_planta = round(comp.valor_por_planta)
+
+        datos_29 = DatosFGR29(vol, comp, t, valor_predio=valor_predio, canon_anual=canon, fecha=fecha)
+        with st.expander("Firmante", expanded=False):
+            c1, c2 = st.columns(2)
+            datos_29.nombre = c1.text_input("Nombre", datos_29.nombre)
+            datos_29.identificacion = c2.text_input("Identificación", datos_29.identificacion)
+            datos_29.direccion = c1.text_input("Dirección", datos_29.direccion)
+            datos_29.telefono = c2.text_input("Teléfono", datos_29.telefono)
+            datos_29.cargo = c1.text_input("Cargo / rol", datos_29.cargo)
+
+        total_aprov = sum(i.total for i in aprov)
+        st.markdown("**Qué se escribe en el FGR-29**")
+        st.dataframe(pd.DataFrame([
+            ("1.1 · fila 10", "Tala y transporte menor",
+             f"{vol:.3f} m³ × $ {t.aprovechamiento_m3:,.0f}", total_aprov),
+            ("1.4 · fila 39", "Contrato de arriendo / servidumbre", "escrito arriba", valor_predio),
+            ("1.4 · fila 42", "Compensación (va solo en 2.6)", "—", 0),
+            ("2.3 · fila 28", "Canon de arrendamiento anual", "escrito arriba", canon),
+            *[(f"2.6 · fila {51 + k}", titulo, "", v) for k, (titulo, v) in enumerate(comp.subtotales.items())],
+            ("2.6 · fila 55", f"Imprevistos ({comp.pct_imprevistos:.0%})", "", comp.imprevistos),
+        ], columns=["Sección · fila", "Concepto", "Cálculo", "Valor"]),
+            hide_index=True, width="stretch", column_config={"Valor": st.column_config.NumberColumn(format="$ %d")})
+        st.caption("El resto del FGR-29 (obras, maquinaria y operación de la minigranja) son los valores "
+                   "estándar de la plantilla.")
+
+        with st.expander(f"Detalle · costos de aprovechamiento ($ {total_aprov:,.0f})"):
+            st.dataframe(_tabla_items(aprov), hide_index=True, width="stretch", column_config=FMT_PESOS)
+        with st.expander(f"Detalle · costos de reposición, {comp.n_plantas} plantas, 3 años ($ {comp.total:,.0f})"):
+            for titulo, items in (("Mano de obra siembra inicial", comp.mano_obra), ("Insumos", comp.insumos),
+                                  ("Herramientas", comp.herramientas),
+                                  ("Reposición, mantenimiento y monitoreo (3 años)", comp.mantenimiento)):
+                st.caption(f"{titulo} · $ {comp.subtotales[titulo]:,.0f}")
+                st.dataframe(_tabla_items(items), hide_index=True, width="stretch", column_config=FMT_PESOS)
+            st.markdown(f"Imprevistos ({comp.pct_imprevistos:.0%}): **$ {comp.imprevistos:,.0f}**")
+
+
 def _gms(v):
     g, m, s_ = decimal_a_gms(v, DECIMALES_SEG)
     return f"{g}° {m}' {s_:.2f}\""
@@ -178,14 +251,37 @@ with tab_b:
     st.code(d.texto_compensacion(), language=None, wrap_lines=True)
 
 
-# --- Descarga (se arma al final para incluir los precios editados) --------------
+# --- Resumen y descarga (se arma al final para incluir lo editado en las pestañas) ------------
 if inv.arboles:
     with zona_descarga:
         nombre = re.sub(r"[^\w\-]+", "_", inv.proyecto or archivo.name.rsplit(".", 1)[0]).strip("_")
-        st.download_button(
-            "⬇️ Descargar FGR-06 (Excel)",
-            data=generar_fgr06(inv, DECIMALES_SEG, parte_b=datos_b),
-            file_name=f"FGR-06_Inventario_{nombre}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            type="primary",
-        )
+        XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        st.subheader("Antes de descargar")
+        if UNICO and datos_29 is not None:
+            tot29 = totales_fgr29(datos_29)
+            total_aprov = sum(i.total for i in costo_aprovechamiento(vol, datos_29.tarifas))
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Aprovechamiento", f"$ {total_aprov:,.0f}", help=f"{vol:.3f} m³ × tala + transporte menor")
+            c2.metric("Compensación (3 años)", f"$ {comp.total:,.0f}", help=f"{comp.n_plantas} plantas")
+            c3.metric("Valor por planta", f"$ {comp.valor_por_planta:,.0f}", help="Va en la renovabilidad de la Parte B")
+            c4.metric("Total FGR-29", f"$ {tot29['total']:,.0f}",
+                      help=f"Inversión $ {tot29['inversion']:,.0f} + operación $ {tot29['operacion']:,.0f}")
+            if not datos_29.valor_predio and not datos_29.canon_anual:
+                st.warning("El valor del contrato de arriendo/servidumbre y el canon están en 0. "
+                           "Escríbelos en la pestaña *Costos (FGR-29)* si aplican.")
+            st.caption("FGR-06 Parte B, FGR-29 y tablas del informe usan estos mismos valores.")
+            b1, b2, b3 = st.columns(3)
+            b1.download_button("⬇️ FGR-06 inventario", data=generar_fgr06(inv, DECIMALES_SEG, parte_b=datos_b),
+                               file_name=f"FGR-06_Inventario_{nombre}.xlsx", mime=XLSX, type="primary",
+                               width="stretch")
+            b2.download_button("⬇️ FGR-29 costos", data=generar_fgr29(datos_29),
+                               file_name=f"FGR-29_Costos_{nombre}.xlsx", mime=XLSX, type="primary",
+                               width="stretch")
+            b3.download_button("⬇️ Tablas de costos del informe",
+                               data=generar_tablas_informe(vol, comp, datos_29.tarifas),
+                               file_name=f"Tablas_costos_informe_{nombre}.xlsx", mime=XLSX, width="stretch")
+        else:
+            st.caption(f"Aprovechamiento doméstico: solo inventario. {len(inv.arboles)} árboles · {vol:.3f} m³ · "
+                       f"{datos_b.n_plantas} plantas a reponer.")
+            st.download_button("⬇️ FGR-06 inventario", data=generar_fgr06(inv, DECIMALES_SEG, parte_b=datos_b),
+                               file_name=f"FGR-06_Inventario_{nombre}.xlsx", mime=XLSX, type="primary")
