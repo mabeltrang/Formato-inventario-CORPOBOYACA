@@ -87,18 +87,11 @@ if kmz is not None:
         avisos_predio.append(f"No se pudo leer el KMZ ({e}); el área del predio queda vacía en el Excel.")
 
 vol = sum(a.vt for a in inv.arboles)
-detectado = "domestico" if vol <= LIMITE_DOMESTICO_M3 else "unico"
-tipo = st.radio(
-    "Tipo de aprovechamiento",
-    ["unico", "domestico"],
-    index=["unico", "domestico"].index(detectado),
-    format_func=lambda t: {"unico": "Árboles aislados · FGR-06 + costos (FGR-29)", "domestico": "Aislados de uso doméstico · solo FGR-06"}[t],
-    horizontal=True,
-    key=f"tipo_{detectado}",   # si cambia el inventario, vuelve a la detección automática
-)
-st.caption(f"Detectado por volumen: {num(vol)} m³ → **{'aislados de uso doméstico' if detectado == 'domestico' else 'árboles aislados'}** "
-           f"(hasta {LIMITE_DOMESTICO_M3} m³ es uso doméstico). Puedes cambiarlo arriba."
-           + ("" if tipo == detectado else " ⚠️ Cambiado a mano."))
+tipo = "domestico" if vol <= LIMITE_DOMESTICO_M3 else "unico"
+if tipo == "domestico":
+    st.info(f"**Aislados de uso doméstico** · {num(vol)} m³ (hasta {LIMITE_DOMESTICO_M3} m³) · se genera solo el FGR-06.")
+else:
+    st.info(f"**Árboles aislados** · {num(vol)} m³ (más de {LIMITE_DOMESTICO_M3} m³) · se generan el FGR-06 y los costos (FGR-29).")
 UNICO = tipo == "unico"
 datos_b = calcular_parte_b(inv, cargar_precios(), area_predio_ha=area, relieve=relieve, tipo_aprovechamiento=tipo)
 
