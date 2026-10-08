@@ -69,3 +69,8 @@ def test_parte_b_escritura():
     assert ws["Q34"].value == "Eucalyptus camaldulensis"
     assert ws["E99"].value == 50
     assert ws["AJ97"].value == "x"
+
+
+def test_precio_por_sinonimo():
+    df = cargar_precios()
+    assert buscar_precio(df, "Hesperocyparis lusitanica") == buscar_precio(df, "Cupressus lusitanica")[0:1] + ("sinónimo",)
