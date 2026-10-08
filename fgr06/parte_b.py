@@ -130,6 +130,8 @@ class DatosParteB:
     especies_siembra: str = ESPECIES_SIEMBRA_DEFECTO
     valor_por_planta: float = VALOR_POR_PLANTA["unico"]
     tipo_aprovechamiento: str = "unico"
+    # Firma del solicitante (aislados: quien firma por Unergy; uso doméstico: el propietario)
+    firmante: str = ""
 
     @property
     def n_plantas(self) -> int:
@@ -372,3 +374,6 @@ def escribir_parte_b(wb, d: DatosParteB) -> None:
     ws["E99"] = d.n_plantas if d.siembra else None
     ws["L99"] = d.especies_siembra if d.siembra else None
     ws["AF101"] = d.valor_por_planta
+
+    # Firma del solicitante
+    ws["A107"] = f"Firma del solicitante: {d.firmante}" if d.firmante else "Firma del solicitante"
